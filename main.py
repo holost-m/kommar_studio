@@ -1,50 +1,41 @@
-from aiogram import Bot, Dispatcher
-from aiogram.filters import Command
-from aiogram.types import Message
-from settings import TOKEN
+import asyncio
 import logging
 
-#  Настраиваем конфигурацию логгера
-logging.basicConfig(
-    level=logging.DEBUG,
-    format='[{asctime}] #{levelname:8} {filename}:'
-           '{lineno} - {name} - {message}',
-    style='{'
-)
+from aiogram import Bot, Dispatcher
+
+# импорт файлов проекта
+
+from handlers import user_handlers
+from settings import TOKEN
+
+
+
+# Инициализируем логгер
 logger = logging.getLogger(__name__)
 
 
-# Вместо BOT TOKEN HERE нужно вставить токен вашего бота, полученный у @BotFather
-BOT_TOKEN = TOKEN
+# Функция конфигурирования и запуска бота
+async def main():
+    # Конфигурируем логирование
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(filename)s:%(lineno)d #%(levelname)-8s '
+               '[%(asctime)s] - %(name)s - %(message)s')
 
-# Создаем объекты бота и диспетчера
-bot = Bot(token=BOT_TOKEN)
-dp = Dispatcher()
+    # Выводим в консоль информацию о начале запуска бота
+    logger.info('Starting bot')
 
+    # Инициализируем бот и диспетчер
+    bot = Bot(token=TOKEN)
+    dp = Dispatcher()
 
-# Этот хэндлер будет срабатывать на команду "/start"
-@dp.message(Command(commands=["start"]))
-async def process_start_command(message: Message):
-    await message.answer('Привет!\nМеня зовут KOMMAR-бот!\nНапиши мне что-нибудь')
-
-
-# Этот хэндлер будет срабатывать на команду "/help"
-@dp.message(Command(commands=['help']))
-async def process_help_command(message: Message):
-    await message.answer(
-        'Напиши мне что-нибудь и в ответ '
-        'я пришлю тебе твое сообщение'
-    )
+    # Регистриуем роутеры в диспетчере
+    dp.include_router(user_handlers.router)
 
 
-# Этот хэндлер будет срабатывать на любые ваши текстовые сообщения,
-# кроме команд "/start" и "/help"
-@dp.message()
-async def send_echo(message: Message):
-
-    await message.reply(text=message.text)
+    # Пропускаем накопившиеся апдейты и запускаем polling
+    await bot.delete_webhook(drop_pending_updates=True)
+    await dp.start_polling(bot)
 
 
-if __name__ == '__main__':
-
-    dp.run_polling(bot)
+asyncio.run(main())
