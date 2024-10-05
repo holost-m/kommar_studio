@@ -26,9 +26,6 @@ class Buttons:
                 lst.append(None)
             return lst
 
-
-
-
         except sqlite3.Error as error:
             print("Ошибка при работе с SQLite", error)
         finally:

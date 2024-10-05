@@ -122,14 +122,6 @@ async def process_to_a_faq(callback: CallbackQuery):
         await callback.message.answer(text='Вставьте корректную ссылку на статью FAQ')
 
 
-
-
-
-
-
-
-
-
 def my_filter_photo_text(message: Message) -> bool:
     id = message.from_user.id
     status_filter = dct_admins[id]['status'] in ['a_lovestory',
