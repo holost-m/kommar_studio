@@ -38,7 +38,7 @@ class Buttons:
             sqlite_connection = sqlite3.connect(DB_NAME)
             cursor = sqlite_connection.cursor()
 
-            sql_select_query = """select url from Buttons where code_name = ?"""
+            sql_select_query = """select url from Buttons where button_name = ?"""
             cursor.execute(sql_select_query, (button_name,))
             url = cursor.fetchone()[0]
 
@@ -56,7 +56,7 @@ class Buttons:
             sqlite_connection = sqlite3.connect(DB_NAME)
             cursor = sqlite_connection.cursor()
 
-            sql_select_query = """select id from Buttons where code_name = ?"""
+            sql_select_query = """select id from Buttons where button_name = ?"""
             cursor.execute(sql_select_query, (button_name,))
             id = cursor.fetchone()[0]
 
@@ -114,7 +114,7 @@ class Buttons:
             sqlite_connection = sqlite3.connect(DB_NAME)
             cursor = sqlite_connection.cursor()
 
-            sql_update_query = """Update Buttons set text_answer = ? where code_name = ?"""
+            sql_update_query = """Update Buttons set text_answer = ? where button_name = ?"""
             data = (new_text_answer, button_name)
             cursor.execute(sql_update_query, data)
             sqlite_connection.commit()
@@ -132,7 +132,7 @@ class Buttons:
             sqlite_connection = sqlite3.connect(DB_NAME)
             cursor = sqlite_connection.cursor()
 
-            sql_update_query = """Update Buttons set url = ? where code_name = ?"""
+            sql_update_query = """Update Buttons set url = ? where button_name = ?"""
             data = (new_url, button_name)
             cursor.execute(sql_update_query, data)
             sqlite_connection.commit()
