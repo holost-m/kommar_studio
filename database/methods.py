@@ -11,14 +11,14 @@ class Buttons:
             sqlite_connection = sqlite3.connect(DB_NAME)
             cursor = sqlite_connection.cursor()
 
-            sql_select_query = """select id, type, text, url, code_name, text_answer from Buttons where code_name = ?"""
+            sql_select_query = """select id, type, text, url, button_name, text_answer from Buttons where button_name = ?"""
             cursor.execute(sql_select_query, (button_name,))
             lst = list(cursor.fetchone())
 
             # Если тип кнопки возвращающий фото
             if lst[1] == 'photos_text':
                 id = lst[0]
-                sql_select_query = """select file from Photos where button_id = ?"""
+                sql_select_query = """select tg_id from Photos where button_id = ?"""
                 cursor.execute(sql_select_query, (id,))
                 files = cursor.fetchall()
                 lst.append(files)
@@ -77,7 +77,7 @@ class Buttons:
             cursor = sqlite_connection.cursor()
 
             sqlite_insert_query = """INSERT INTO Photos
-                                  (file, button_id)
+                                  (tg_id, button_id)
                                   VALUES
                                   (?, ?);"""
             count = cursor.execute(sqlite_insert_query, (photo_id, id))
