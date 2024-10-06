@@ -1,0 +1,16 @@
+# файлы проекта (настройки и
+/settings.py
+/описания/
+/database/kommar_studio_db.db3
+/service/users.xlsx
+
+# виртуальное окружение
+/venv/
+
+# PyCharm
+.idea/
+*.iml
+
+# Кэшированные файлы Python
+__pycache__/
+*.pyc

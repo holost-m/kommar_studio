@@ -3,7 +3,6 @@ from aiogram import F
 from aiogram.types import CallbackQuery
 from keyboards.admin_keyboards import admin_menu
 from keyboards.user_keyboards import to_main_menu_kb, main_keyboard
-from service.utils import dct_admins
 from aiogram.types import Message
 from service.utils import (dct_admins,
                            clean_all_status,
