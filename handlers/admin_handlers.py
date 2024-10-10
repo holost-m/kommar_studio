@@ -155,19 +155,26 @@ async def edit_info_photo_text(message: Message):
         pass
 
 
-def my_filter_url(message: Message) -> bool:
+def my_filter_url_faq(message: Message) -> bool:
     id = message.from_user.id
     status_filter = dct_admins[id]['status'] in ['a_faq']
     return is_admin(dct_admins, id) and status_filter
 
 
-@router.message(my_filter_url)
-async def edit_info_url(message: Message):
+def my_filter_url_make_order(message: Message) -> bool:
+    id = message.from_user.id
+    status_filter = dct_admins[id]['status'] in ['a_make_order']
+    return is_admin(dct_admins, id) and status_filter
+
+
+
+@router.message(my_filter_url_faq)
+async def edit_info_faq_url(message: Message):
     id = message.from_user.id
     status = dct_admins[id]['status'][2:]
     if message.text and message.text.startswith('https://telegra.ph/'):
         Buttons.update_url(status, message.text)
-        text = 'Сохранено! Для выхода из режима редактирования перейдите в главное меню'
+        text = 'Сохранено faq! Для выхода из режима редактирования перейдите в главное меню'
     else:
         text = 'Некорректный url! Для выхода из режима редактирования перейдите в главное меню'
 
@@ -175,3 +182,32 @@ async def edit_info_url(message: Message):
         text=text,
         reply_markup=to_main_menu_kb()
     )
+
+
+# Нажата кнопка "a_make_order". Режим редактирования
+@router.callback_query(F.data == 'a_make_order')
+async def process_to_a_faq(callback: CallbackQuery):
+    id = callback.from_user.id
+    if is_admin(dct_admins, id):
+        dct_admins[id]['status'] = 'a_make_order'
+        await callback.message.answer(text='Вставьте корректную ссылку на чат, в который перейдет пользователь, нажавший кнопку "Сделать заказ". Ссылка должна начинаться с https://t.me/')
+
+
+@router.message(my_filter_url_make_order)
+async def edit_info_faq_url(message: Message):
+    id = message.from_user.id
+    status = dct_admins[id]['status'][2:]
+    if message.text and message.text.startswith('https://t.me/'):
+        Buttons.update_url(status, message.text)
+        text = 'Сохранено (Ссылка на чат "Сделать заказ")! Для выхода из режима редактирования перейдите в главное меню'
+    else:
+        text = 'Некорректный url! Для выхода из режима редактирования перейдите в главное меню'
+
+    await message.answer(
+        text=text,
+        reply_markup=to_main_menu_kb()
+    )
+
+
+
+

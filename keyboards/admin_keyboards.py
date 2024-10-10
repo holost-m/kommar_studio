@@ -8,32 +8,32 @@ def admin_menu():
     )
 
     lovestory = InlineKeyboardButton(
-        text='Lovestory',
+        text='Lovestory🔮',
         callback_data='a_lovestory'
     )
 
     family = InlineKeyboardButton(
-        text='Семья',
+        text='Семья🔮',
         callback_data='a_family'
     )
 
     best = InlineKeyboardButton(
-        text='Бэсти',
+        text='Бэсти🔮',
         callback_data='a_best'
     )
 
     man_of_the_year = InlineKeyboardButton(
-        text='Человек года',
+        text='Человек года🔮',
         callback_data='a_man_of_the_year'
     )
 
     corporate = InlineKeyboardButton(
-        text='Корпоративные',
+        text='Корпоративные🔮',
         callback_data='a_corporate'
     )
 
     lookbook = InlineKeyboardButton(
-        text='Лукбук',
+        text='Лукбук🔮',
         callback_data='a_lookbook'
     )
 
@@ -42,9 +42,19 @@ def admin_menu():
         callback_data='a_cost'
     )
 
+    get_promocode = InlineKeyboardButton(
+        text='Промокод',
+        callback_data='a_get_promocode'
+    )
+
     faq = InlineKeyboardButton(
-        text='FAQ (url статьи) ',
+        text='Ссылка на статью faq (url)',
         callback_data='a_faq'
+    )
+
+    make_order = InlineKeyboardButton(
+        text='Ссылка на чат (Сделать заказ)',
+        callback_data='a_make_order'
     )
 
     # Создаем объект инлайн-клавиатуры меню образцов
@@ -57,5 +67,7 @@ def admin_menu():
                          [corporate],
                          [lookbook],
                          [cost],
-                         [faq]])
+                         [get_promocode],
+                         [faq],
+                         [make_order]])
     return samples_keyboard
