@@ -144,6 +144,24 @@ class Buttons:
             if sqlite_connection:
                 sqlite_connection.close()
 
+    @classmethod
+    def update_text(cls, button_name, new_text):
+        try:
+            sqlite_connection = sqlite3.connect(DB_NAME)
+            cursor = sqlite_connection.cursor()
+
+            sql_update_query = """Update Buttons set text_answer = ? where button_name = ?"""
+            data = (new_text, button_name)
+            cursor.execute(sql_update_query, data)
+            sqlite_connection.commit()
+            cursor.close()
+
+        except sqlite3.Error as error:
+            print("Ошибка при работе с SQLite", error)
+        finally:
+            if sqlite_connection:
+                sqlite_connection.close()
+
 class Users:
     @classmethod
     def get_tg_ids(cls):

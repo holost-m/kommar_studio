@@ -209,5 +209,29 @@ async def edit_info_faq_url(message: Message):
     )
 
 
+# Нажата кнопка "a_get_promocode". Режим редактирования
+@router.callback_query(F.data == 'a_get_promocode')
+async def process_to_a_get_promocode(callback: CallbackQuery):
+    id = callback.from_user.id
+    if is_admin(dct_admins, id):
+        dct_admins[id]['status'] = 'a_get_promocode'
+        await callback.message.answer(text='Вставьте текстовый промокод')
 
 
+def my_filter_a_get_promocode(message: Message) -> bool:
+    id = message.from_user.id
+    status_filter = dct_admins[id]['status'] in ['a_get_promocode']
+    return is_admin(dct_admins, id) and status_filter
+
+@router.message(my_filter_a_get_promocode)
+async def edit_info_get_promocode(message: Message):
+    id = message.from_user.id
+    status = dct_admins[id]['status'][2:]
+
+    Buttons.update_text(status, message.text)
+    text = f'Промокод "{message.text}" сохранен.'
+
+    await message.answer(
+        text=text,
+        reply_markup=to_main_menu_kb()
+    )
