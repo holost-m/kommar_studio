@@ -57,8 +57,13 @@ def admin_menu():
         callback_data='a_make_order'
     )
 
-    # Создаем объект инлайн-клавиатуры меню образцов
-    samples_keyboard = InlineKeyboardMarkup(
+    new_year = InlineKeyboardButton(
+        text='НОВОГОДНИЙ ЖУРНАЛ',
+        callback_data='a_new_year'
+    )
+
+    # Создаем объект инлайн-клавиатуры admin_menu
+    admin_menu = InlineKeyboardMarkup(
         inline_keyboard=[[to_main_keyboard],
                          [lovestory],
                          [family],
@@ -69,5 +74,6 @@ def admin_menu():
                          [cost],
                          [get_promocode],
                          [faq],
-                         [make_order]])
-    return samples_keyboard
+                         [make_order],
+                         [new_year]])
+    return admin_menu

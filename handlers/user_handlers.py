@@ -128,6 +128,15 @@ async def process_to_cost(callback: CallbackQuery):
     await callback.message.answer(text=data[5],
                                   reply_markup=to_main_menu_kb())
 
+# Нажата кнопка "new_year"
+@router.callback_query(F.data == 'new_year')
+async def process_to_cost(callback: CallbackQuery):
+    data = Buttons.answer('new_year')
+    if data[6]:
+        media = [InputMediaPhoto(media=photo[0]) for photo in data[6]]
+        await callback.message.answer_media_group(media)
+    await callback.message.answer(text=data[5], reply_markup=to_main_menu_kb())
+
 
 
 

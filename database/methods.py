@@ -58,9 +58,11 @@ class Buttons:
 
             sql_select_query = """select id from Buttons where button_name = ?"""
             cursor.execute(sql_select_query, (button_name,))
-            id = cursor.fetchone()[0]
+            res = cursor.fetchone()
+            if res:
+                id = res[0]
 
-            return id
+                return id
 
         except sqlite3.Error as error:
             print("Ошибка при работе с SQLite", error)

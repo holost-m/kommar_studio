@@ -5,6 +5,11 @@ def main_keyboard(is_admin=False):
     # Создаем объекты инлайн-кнопок главного меню
     # url кнопка
 
+    new_year = InlineKeyboardButton(
+        text='🎄СОЗДАТЬ ВАШ НОВОГОДНИЙ ЖУРНАЛ🎄',
+        callback_data='new_year'
+    )
+
     make_order = InlineKeyboardButton(
         text='✅ЗАКАЗАТЬ (чат с редактором)',
         url=Buttons.get_url('make_order')
@@ -45,7 +50,8 @@ def main_keyboard(is_admin=False):
     # Создаем объект инлайн-клавиатуры главного меню
     if is_admin:
         return InlineKeyboardMarkup(
-        inline_keyboard=[[make_order],
+        inline_keyboard=[[new_year],
+                        [make_order],
                         [samples],
                         [cost],
                         [faq],

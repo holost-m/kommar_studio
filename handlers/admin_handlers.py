@@ -112,6 +112,15 @@ async def process_to_a_cost(callback: CallbackQuery):
         dct_admins[id]['status'] = 'a_cost'
         await callback.message.answer(text='Выберите несколько фото, добавьте их описание одним сообщением')
 
+# Нажата кнопка "a_new_year". Режим редактирования
+@router.callback_query(F.data == 'a_new_year')
+async def process_to_a_cost(callback: CallbackQuery):
+    id = callback.from_user.id
+    Buttons.delete_photo('new_year')
+    if is_admin(dct_admins, id):
+        dct_admins[id]['status'] = 'a_new_year'
+        await callback.message.answer(text='Выберите несколько фото, добавьте их описание одним сообщением')
+
 # Нажата кнопка "a_faq". Режим редактирования
 @router.callback_query(F.data == 'a_faq')
 async def process_to_a_faq(callback: CallbackQuery):
@@ -129,7 +138,8 @@ def my_filter_photo_text(message: Message) -> bool:
                                                  'a_man_of_the_year',
                                                  'a_corporate',
                                                  'a_lookbook',
-                                                 'a_cost']
+                                                 'a_cost',
+                                                 'a_new_year']
     return is_admin(dct_admins, id) and status_filter
 
 
@@ -137,8 +147,9 @@ def my_filter_photo_text(message: Message) -> bool:
 async def edit_info_photo_text(message: Message):
     id = message.from_user.id
     status = dct_admins[id]['status'][2:]
-
+    print('150')
     if message.photo:
+        print('152')
         Buttons.save_photo(status, message.photo[-1].file_id)
 
     if message.caption:
