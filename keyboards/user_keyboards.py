@@ -6,7 +6,7 @@ def main_keyboard(is_admin=False):
     # url кнопка
 
     make_order = InlineKeyboardButton(
-        text='Сделать заказ (перейти в чат)',
+        text='✅ЗАКАЗАТЬ',
         url=Buttons.get_url('make_order')
     )
 
@@ -112,12 +112,18 @@ def samples_keyboard():
 
 
 def to_main_menu_kb():
+    make_order = InlineKeyboardButton(
+        text='✅ЗАКАЗАТЬ',
+        url=Buttons.get_url('make_order')
+    )
+
     to_main_keyboard = InlineKeyboardButton(
         text='В основное меню⬅',
         callback_data='to_main_keyboard'
     )
 
     to_main_menu_kb = InlineKeyboardMarkup(
-        inline_keyboard=[[to_main_keyboard]])
+        inline_keyboard=[[to_main_keyboard],
+                         make_order])
 
     return to_main_menu_kb
