@@ -147,9 +147,7 @@ def my_filter_photo_text(message: Message) -> bool:
 async def edit_info_photo_text(message: Message):
     id = message.from_user.id
     status = dct_admins[id]['status'][2:]
-    print('150')
     if message.photo:
-        print('152')
         Buttons.save_photo(status, message.photo[-1].file_id)
 
     if message.caption:
