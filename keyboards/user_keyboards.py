@@ -6,28 +6,28 @@ def main_keyboard(is_admin=False):
     # url кнопка
 
     make_order = InlineKeyboardButton(
-        text='✅ЗАКАЗАТЬ',
+        text='✅ЗАКАЗАТЬ (чат с редактором)',
         url=Buttons.get_url('make_order')
     )
 
     samples = InlineKeyboardButton(
-        text='Образцы работ',
+        text='📓Каким будет ваш журнал',
         callback_data='samples'
     )
 
     cost = InlineKeyboardButton(
-        text='Стоимость работ',
+        text='💎Стоимость',
         callback_data='cost'
     )
 
     # url кнопка
     faq = InlineKeyboardButton(
-        text='FAQ (Часто задаваемые вопросы)',
+        text='❓FAQ (доставка, сроки, печать, содержание)',
         url=Buttons.get_url('faq')
     )
 
     get_promocode = InlineKeyboardButton(
-        text='Получить промокод',
+        text='💝Получить промокод',
         callback_data='get_promocode'
     )
 
@@ -70,32 +70,32 @@ def samples_keyboard():
     )
 
     lovestory = InlineKeyboardButton(
-        text='Lovestory',
+        text='❤️Капсула «Love is…»',
         callback_data='lovestory'
     )
 
     family = InlineKeyboardButton(
-        text='Семья',
+        text='🤍Капсула «Семья»',
         callback_data='family'
     )
 
     best = InlineKeyboardButton(
-        text='Бэсти',
+        text='💅Капсула «Бэсти»',
         callback_data='best'
     )
 
     man_of_the_year = InlineKeyboardButton(
-        text='Человек года',
+        text='🏆Капсула «Человек года»',
         callback_data='man_of_the_year'
     )
 
     corporate = InlineKeyboardButton(
-        text='Корпоративные',
+        text='📓Журналы для бизнеса',
         callback_data='corporate'
     )
 
     lookbook = InlineKeyboardButton(
-        text='Лукбук',
+        text='📸Ваш lookbook',
         callback_data='lookbook'
     )
 
@@ -123,7 +123,10 @@ def to_main_menu_kb():
     )
 
     to_main_menu_kb = InlineKeyboardMarkup(
-        inline_keyboard=[[to_main_keyboard],
-                         make_order])
+        inline_keyboard=[
+            [make_order],
+            [to_main_keyboard]
+            ]
+    )
 
     return to_main_menu_kb
