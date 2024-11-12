@@ -60,7 +60,8 @@ def main_keyboard(is_admin=False):
                         [get_users]]) # добавили админу
     else:
         return InlineKeyboardMarkup(
-        inline_keyboard=[[make_order],
+        inline_keyboard=[[new_year],
+                        [make_order],
                         [samples],
                         [cost],
                         [faq],
