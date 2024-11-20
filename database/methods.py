@@ -193,6 +193,42 @@ class Users:
             users = cursor.fetchall()
             return users
 
+class NewYearQuestions:
+    column_names = ('id', 'number', 'question', 'description', 'type', 'button', 'is_active')
+
+    @classmethod
+    def get_all_questions(cls) -> list[tuple]:
+        """
+        Получить все вопросы из таблицы NewYearQuestions, которые активны на данный момент
+        """
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM NewYearQuestions WHERE is_active = 1")
+            questions = cursor.fetchall()
+            return questions
+
+    @classmethod
+    def get_question_by_number(cls, number: int) -> tuple:
+        """
+        Получить один вопрос по его номеру (проверка на active)
+        """
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM NewYearQuestions WHERE number = ? AND is_active = 1", (number,))
+            question = cursor.fetchone()
+            return question
+
+    @classmethod
+    def get_active_question_numbers(cls) -> list[int]:
+        """
+        Получить все активные номера вопросов
+        """
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT number FROM NewYearQuestions WHERE is_active = 1")
+            active_numbers = [row[0] for row in cursor.fetchall()]
+            return active_numbers
+
 
 
 

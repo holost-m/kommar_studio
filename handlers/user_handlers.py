@@ -30,6 +30,7 @@ async def process_start_command(message: Message, bot):
         save_user(message.from_user)
 
     await bot.send_message(762151919, f'Пользователь https://t.me/{message.from_user.username} запустил бота')
+    await bot.send_message(459017020, f'Пользователь https://t.me/{message.from_user.username} запустил бота')
 
     await message.answer(
         text='Главное меню',

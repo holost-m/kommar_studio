@@ -17,6 +17,7 @@ from database.methods import Buttons, Users
 from aiogram.types import (InputFile,
                            InputMediaPhoto)
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from states.user_states import fsm
 
 
 # Инициализируем роутер для обработки пользовательских сообщений
@@ -24,24 +25,56 @@ router = Router()
 
 
 # Создаем кнопку
-button = KeyboardButton('Отправить')
+button = KeyboardButton(text='Отправить')
 # Создаем клавиатуру и добавляем кнопку
-keyboard = ReplyKeyboardMarkup(resize_keyboard=True).add(button)
+keyboard = ReplyKeyboardMarkup(keyboard=[[button]], resize_keyboard=True)
+
+
 
 # Фильтр на состояние
-def new_year_filter(message: Message) -> bool:
+def new_year_filter_next(message: Message) -> bool:
+    """
+    Сработает если у пользователя корректное состояние и он нажал отправить
+    :param message:
+    :return: bool
+    """
     user_id = message.from_user.id
     message_text = message.text
+    condition = (message_text == 'Отправить') and fsm.is_correct_state(user_id)
+    return condition
+
+# фильтр на callback (пользователь не пользовался анкетой)
+def callback_filter(callback: CallbackQuery):
+    """
+    Сработает только при нажатии на кнопку и если пользователь не проходил анкету
+    :param callback:
+    :return: bool
+    """
+    callback_data = callback.data
+    user_id = callback.from_user.id
+    condition = callback_data == 'new_year_questions' and fsm.get_state(user_id) is None
+    return condition
+
 
 # Нажата кнопка "Заполнить Новогоднюю анкету"
-@router.callback_query(F.data == 'new_year_question')
+@router.callback_query(callback_filter)
 async def process_samples_press(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    fsm.next_state(user_id)
+
     await callback.message.answer(
         text='Далее Вы можете заполнить новогоднюю анкету.\nНажимайте кнопку "Отправить" для перехода к следующему вопросу',
         reply_markup=keyboard
     )
 
-@router.message(new_year_filter)
+@router.message(new_year_filter_next)
 async def send_question(message: Message):
+    user_id = message.from_user.id
+    current_state = fsm.get_state(user_id)
+
+    fsm.next_state(user_id)
+    # получаем вопрос
+    text, descr = fsm.get_question(user_id)
+
     await message.answer(
-        text='Главное меню')
+        text=f'{current_state}. {text}\n{descr}\nДля следующего вопроса жми отправить', reply_markup=keyboard)

@@ -4,6 +4,7 @@ import redis
 import json
 
 red = redis.Redis(host='localhost', port=6379, db=0)
+red.flushdb()
 
 class UserDict:
     """
@@ -87,7 +88,9 @@ class FSM:
         """
         Получаем состояния из БД. Состояния это номера вопросов
         """
-        self.states_list = sorted(NewYearQuestions.get_active_question_numbers())
+        question_list = list(map(int, NewYearQuestions.get_active_question_numbers()))
+        question_list.append(0)
+        self.states_list = sorted(question_list)
         self.first_state = self.states_list[0]
         self.last_state = self.states_list[-1] + 1 # последнее состояние - вопросы пройдены
 
@@ -116,7 +119,11 @@ class FSM:
         if state is None:
             return None
         else:
-            return self.redis_dict[user_id]['state']
+            return int(self.redis_dict[user_id]['state'])
+
+    def is_correct_state(self, user_id: int):
+        state = self.get_state(user_id)
+        return state in self.states_list
 
     def next_state(self, user_id: int):
         """
@@ -148,19 +155,20 @@ class FSM:
 
         # Пользователь начал проходит анкету
         if user_state is None:
-            self.next_state(user_id)
-            user_state = self.get_state(user_id)
-            question = NewYearQuestions.get_question_by_number(user_state)
+            text, descr = '', ''
 
         # Пользователь проходит анкету
         elif user_state in self.states_list:
+            # + 1 потому что во время вопроса у нас состояние на 1 меньше вопроса
             question = NewYearQuestions.get_question_by_number(user_state)
+            text = question[2]
+            descr = question[3]
 
         # Пользователь прошел анкету
         else:
-            question = None
+            text, descr = '', ''
 
-        return question
+        return text, descr
 
 
 
@@ -171,11 +179,3 @@ class FSM:
 
 redis_dict = RedisDict(red)
 fsm = FSM(redis_dict)
-print(fsm.get_state(32))
-print(fsm.get_question(56))
-fsm.next_state(32)
-print(fsm.get_state(32))
-print(fsm.get_question(32))
-fsm.next_state(32)
-print(fsm.get_state(32))
-print(fsm.get_question(32))

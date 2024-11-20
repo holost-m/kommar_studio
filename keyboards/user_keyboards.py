@@ -10,6 +10,11 @@ def main_keyboard(is_admin=False):
         callback_data='new_year'
     )
 
+    new_year_questions = InlineKeyboardButton(
+        text='️⭐️Анкета для Новогоднего журнала️⭐️️️',
+        callback_data='new_year_questions'
+    )
+
     make_order = InlineKeyboardButton(
         text='✅ЗАКАЗАТЬ (чат с редактором)',
         url=Buttons.get_url('make_order')
@@ -51,21 +56,23 @@ def main_keyboard(is_admin=False):
     if is_admin:
         return InlineKeyboardMarkup(
         inline_keyboard=[[new_year],
-                        [make_order],
-                        [samples],
-                        [cost],
-                        [faq],
-                        [get_promocode],
-                        [edit_all], # добавили админу
-                        [get_users]]) # добавили админу
+                         [new_year_questions],
+                         [make_order],
+                         [samples],
+                         [cost],
+                         [faq],
+                         [get_promocode],
+                         [edit_all], # добавили админу
+                         [get_users]]) # добавили админу
     else:
         return InlineKeyboardMarkup(
         inline_keyboard=[[new_year],
-                        [make_order],
-                        [samples],
-                        [cost],
-                        [faq],
-                        [get_promocode]])
+                         [new_year_questions],
+                         [make_order],
+                         [samples],
+                         [cost],
+                         [faq],
+                         [get_promocode]])
 
 
 def samples_keyboard():
