@@ -1,0 +1,76 @@
+import redis
+
+# Подключение к Redis
+red = redis.Redis(host='localhost', port=6379, db=0)
+
+# Установить значение для ключа
+red.set('my_key', 'my_value')
+
+# Получить значение для ключа
+value = red.get('my_key')
+print(f'my_key: {value.decode("utf-8")}')
+
+# Удалить ключ
+red.delete('my_key')
+
+# Проверить, что ключ удален
+value_after_delete = red.get('my_key')
+print(f'my_key after delete: {value_after_delete}')
+
+# Увеличить значение ключа на 1
+red.set('counter', 10)
+red.incr('counter')
+counter_value = red.get('counter')
+print(f'counter after incr: {counter_value.decode("utf-8")}')
+
+# Уменьшить значение ключа на 1
+red.decr('counter')
+counter_value_after_decr = red.get('counter')
+print(f'counter after decr: {counter_value_after_decr.decode("utf-8")}')
+
+# Добавить элемент в начало списка
+red.lpush('my_list', 'item1')
+red.lpush('my_list', 'item2')
+
+# Добавить элемент в конец списка
+red.rpush('my_list', 'item3')
+
+# Получить все элементы списка
+list_items = red.lrange('my_list', 0, -1)
+print(f'my_list: {[item.decode("utf-8") for item in list_items]}')
+
+# Добавить элементы в множество
+red.sadd('my_set', 'element1', 'element2')
+
+# Получить все элементы множества
+set_members = red.smembers('my_set')
+print(f'my_set: {[member.decode("utf-8") for member in set_members]}')
+
+
+Манипуляции со словарем
+
+import redis
+import json
+
+# Подключение к Redis
+red = redis.Redis(host='localhost', port=6379, db=0)
+
+# Создание словаря
+my_dict = {'name': 'Alice', 'age': 30, 'city': 'Wonderland'}
+
+# Сериализация словаря в JSON и сохранение в Redis
+red.set('my_dict_key', json.dumps(my_dict))
+
+# Получение словаря из Redis и десериализация из JSON
+retrieved_dict = json.loads(red.get('my_dict_key'))
+print(f'Retrieved dictionary: {retrieved_dict}')
+
+# Манипуляция со словарем
+retrieved_dict['age'] = 31
+
+# Сериализация измененного словаря и сохранение обратно в Redis
+red.set('my_dict_key', json.dumps(retrieved_dict))
+
+# Получение обновленного словаря из Redis и десериализация из JSON
+updated_dict = json.loads(red.get('my_dict_key'))
+print(f'Updated dictionary: {updated_dict}')
