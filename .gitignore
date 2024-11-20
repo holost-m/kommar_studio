@@ -1,6 +1,7 @@
 # файлы проекта (настройки и
 /settings.py
 /описания/
+/database/dumps
 /database/kommar_studio_db.db3
 /service/users.xlsx
 

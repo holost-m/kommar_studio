@@ -1,0 +1,28 @@
+Документация бота kommar_studio.
+
+1. Установка Redis
+
+    Установка Redis на Linux вообще проще некуда:
+sudo apt install redis
+
+    Устанавливаем. А затем перезапускаем сервер:
+sudo service redis-server restart
+
+    Проверяем, что сервер запущен:
+sudo service redis-server status
+
+    Если все ок - среди прочей информации видим строчку:
+Status: "Ready to accept connections"
+
+
+2. Формат ответа на НГ анкету
+
+answers = {
+    date_start = '2024-10-11 00:11:03.918631' # iso
+    date_end = '2024-10-11 00:11:03.918631' # iso
+    body = [
+            {id: 3, 'number': 1, 'question': '...', type: 'text', text_answer: '', photos: ['id_photo1', 'id_photo2']},
+
+           ]
+
+}

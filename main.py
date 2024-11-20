@@ -7,7 +7,8 @@ from aiogram import Bot, Dispatcher
 
 from handlers import (user_handlers,
                       other_handlers,
-                      admin_handlers)
+                      admin_handlers,
+                      user_new_year_handlers)
 from settings import TOKEN
 
 
@@ -35,6 +36,7 @@ async def main():
 
     # Регистриуем роутеры в диспетчере
     dp.include_router(user_handlers.router)
+    dp.include_router(user_new_year_handlers.router)
     dp.include_router(admin_handlers.router)
     dp.include_router(other_handlers.router)
 
