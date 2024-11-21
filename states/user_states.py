@@ -82,7 +82,6 @@ class FSM:
     def __init__(self, redis_dict: RedisDict):
         self.redis_dict: RedisDict = redis_dict
         self.update_states()  # получаем список состояний
-        self.create_answer_tmpl()  # создаем шаблон ответа
 
     def update_states(self):
         """
@@ -94,7 +93,7 @@ class FSM:
         self.first_state = self.states_list[0]
         self.last_state = self.states_list[-1] + 1 # последнее состояние - вопросы пройдены
 
-    def create_answer_tmpl(self):
+    def create_answer_tmpl(self, user_id: int):
         """
         Создаем шаблон словаря, который хранится в редис по id пользователя
         Берем его из БД
@@ -114,12 +113,14 @@ class FSM:
                           'photos': []}
             self.answer_tmpl['body'][number] = new_answer
 
+        self.redis_dict[user_id] = self.answer_tmpl
+
     def get_state(self, user_id: int):
         state = self.redis_dict[user_id]
         if state is None:
             return None
         else:
-            return int(self.redis_dict[user_id]['state'])
+            return self.redis_dict[user_id]['state']
 
     def is_correct_state(self, user_id: int):
         state = self.get_state(user_id)
@@ -170,6 +171,30 @@ class FSM:
 
         return text, descr
 
+    def get_type_question(self, user_id: int):
+        number: int | None = self.get_state(user_id)
+        if number:
+            question = NewYearQuestions.get_question_by_number(number)
+            type_question = question[4]
+            print(type_question)
+            return type_question
+        return None
+
+    def add_text(self, user_id: int, text):
+        number: str = str(self.get_state(user_id))
+        if number:
+            # Создали верхний словарь User_dict
+            change_dict = self.redis_dict[user_id]
+            print(change_dict)
+            # Получили просто словарь body
+            answers = change_dict['answers']
+            print(answers)
+            # изменили этот просто словарь
+            answers['body'][number]['text_answer'] = answers['body'][number]['text_answer'] + '\n' + text
+            # перезаписали user_dict
+            change_dict['answers'] = answers
+
+            # ну вышло сложнее, чем я думал
 
 
 

@@ -38,6 +38,7 @@ def new_year_filter_next(message: Message) -> bool:
     :param message:
     :return: bool
     """
+
     user_id = message.from_user.id
     message_text = message.text
     condition = (message_text == 'Отправить') and fsm.is_correct_state(user_id)
@@ -55,11 +56,22 @@ def callback_filter(callback: CallbackQuery):
     condition = callback_data == 'new_year_questions' and fsm.get_state(user_id) is None
     return condition
 
+# фильтр только на текст
+def only_text_filter(message: Message) -> bool:
+    user_id = message.from_user.id
+    message_text = message.text
+    print(fsm.get_type_question(user_id) == 'text', message_text)
+
+    condition = fsm.get_type_question(user_id) == 'text' and message_text
+    return condition
 
 # Нажата кнопка "Заполнить Новогоднюю анкету"
 @router.callback_query(callback_filter)
 async def process_samples_press(callback: CallbackQuery):
     user_id = callback.from_user.id
+
+    # инициализируем словарь
+    fsm.create_answer_tmpl(user_id)
     fsm.next_state(user_id)
 
     await callback.message.answer(
@@ -67,6 +79,7 @@ async def process_samples_press(callback: CallbackQuery):
         reply_markup=keyboard
     )
 
+# Переключает состояние и возвращает вопрос по нему
 @router.message(new_year_filter_next)
 async def send_question(message: Message):
     user_id = message.from_user.id
@@ -78,3 +91,15 @@ async def send_question(message: Message):
 
     await message.answer(
         text=f'{current_state}. {text}\n{descr}\nДля следующего вопроса жми отправить', reply_markup=keyboard)
+
+# текстовый обработчик
+@router.message(only_text_filter)
+async def add_text(message: Message):
+    print('add_text')
+    """
+    Текст, который пришел надо добавить в словарь в редис
+    """
+    user_id = message.from_user.id
+    message_text = message.text
+    fsm.add_text(user_id, message_text)
+    print(fsm.redis_dict[user_id])
