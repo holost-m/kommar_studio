@@ -60,12 +60,25 @@ def callback_filter(callback: CallbackQuery):
 def only_text_filter(message: Message) -> bool:
     user_id = message.from_user.id
     message_text = message.text
-    print(fsm.get_type_question(user_id) == 'text', message_text)
 
-    condition = fsm.get_type_question(user_id) == 'text' and message_text
+
+    condition = (fsm.is_correct_state(user_id)
+                 and message_text
+                 and fsm.get_type_question(user_id) == 'text')
     return condition
 
-# Нажата кнопка "Заполнить Новогоднюю анкету"
+# фильтр для photo_text
+def photo_text_filter(message: Message) -> bool:
+    user_id = message.from_user.id
+    message_text = message.text
+    message_photo = message.photo
+
+    condition = ((fsm.is_correct_state(user_id)
+                 and fsm.get_type_question(user_id) == 'photo_text')
+                 and (message_text or message_photo))
+    return condition
+
+# Нажата кнопка "Заполнить Новогоднюю анкету". Точка входа
 @router.callback_query(callback_filter)
 async def process_samples_press(callback: CallbackQuery):
     user_id = callback.from_user.id
@@ -83,23 +96,54 @@ async def process_samples_press(callback: CallbackQuery):
 @router.message(new_year_filter_next)
 async def send_question(message: Message):
     user_id = message.from_user.id
+    fsm.next_state(user_id)
+
+    # получаем текущее состояние
     current_state = fsm.get_state(user_id)
 
-    fsm.next_state(user_id)
-    # получаем вопрос
-    text, descr = fsm.get_question(user_id)
+    if int(current_state) != fsm.last_state:
+        # получаем вопрос
+        text, descr = fsm.get_question(user_id)
 
-    await message.answer(
-        text=f'{current_state}. {text}\n{descr}\nДля следующего вопроса жми отправить', reply_markup=keyboard)
+        await message.answer(
+            text=f'{current_state}. {text}\n\n{descr}\nДля следующего вопроса жми отправить', reply_markup=keyboard)
+    else:
+        await message.answer(text='Анкета заполнена!', reply_markup=to_main_menu_kb())
 
 # текстовый обработчик
 @router.message(only_text_filter)
 async def add_text(message: Message):
-    print('add_text')
+
     """
     Текст, который пришел надо добавить в словарь в редис
     """
     user_id = message.from_user.id
     message_text = message.text
     fsm.add_text(user_id, message_text)
-    print(fsm.redis_dict[user_id])
+
+
+# photo_text обработчик. добавить их в список
+@router.message(photo_text_filter)
+async def add_photo_text(message: Message):
+    """
+    Получить все id photo и добавить их в редис.
+    В первом сообщении придет текст и первое фото, в остальных сообщения только фото
+    Поэтому эта функция будет срабатывать столько раз, сколько пришло фото
+    """
+    user_id = message.from_user.id
+    message_text = message.text
+    message_caption = message.caption
+    media_group_id = message.media_group_id
+
+    if message.photo:
+        photo_id = message.photo[-1].file_id
+        fsm.add_photo(user_id, photo_id)
+
+    if message_text:
+        fsm.add_text(user_id, message_text)
+
+    if message_caption:
+        fsm.add_text(user_id, message_caption)
+
+    await message.answer(
+        text=f' ', reply_markup=keyboard)

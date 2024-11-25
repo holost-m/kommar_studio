@@ -176,7 +176,7 @@ class FSM:
         if number:
             question = NewYearQuestions.get_question_by_number(number)
             type_question = question[4]
-            print(type_question)
+
             return type_question
         return None
 
@@ -185,16 +185,52 @@ class FSM:
         if number:
             # Создали верхний словарь User_dict
             change_dict = self.redis_dict[user_id]
-            print(change_dict)
+
             # Получили просто словарь body
             answers = change_dict['answers']
-            print(answers)
+
             # изменили этот просто словарь
             answers['body'][number]['text_answer'] = answers['body'][number]['text_answer'] + '\n' + text
             # перезаписали user_dict
             change_dict['answers'] = answers
 
             # ну вышло сложнее, чем я думал
+
+    def add_photo(self, user_id: int, photo_id: str):
+        """
+        Добавляет фото id в словарь редис
+        :param user_id:
+        :param text:
+        :return:
+        """
+        number: str = str(self.get_state(user_id))
+        if number:
+            # Создали верхний словарь User_dict
+            change_dict = self.redis_dict[user_id]
+
+            # Получили просто словарь body
+            answers = change_dict['answers']
+
+            # изменили этот просто словарь
+            answers['body'][number]['photos'].append(photo_id)
+            # перезаписали user_dict
+            change_dict['answers'] = answers
+
+    def get_all_answers(self, user_id):
+        """
+        Вернет словарь всех ответов пользователя на все вопросы
+        :param user_id: int
+        :return: dict
+        """
+        number: str = str(self.get_state(user_id))
+        if number:
+            # Создали верхний словарь User_dict
+            change_dict = self.redis_dict[user_id]
+
+            # возвращаем dict
+            return change_dict.user_dict
+
+
 
 
 
