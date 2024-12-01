@@ -53,15 +53,16 @@ def new_year_filter_next(message: Message) -> bool:
     if fsm.get_type_question(user_id) == 'press_button':
         return True
 
-    condition = (message_text == get_kb_text(user_id)) and fsm.is_correct_state(user_id)
+    # обработка последнего состояния???????
+    condition = (fsm.is_correct_state(user_id) and (message_text == get_kb_text(user_id))
+                 or fsm.is_last_state(user_id)) # не будет формироваться клавиатура для последнего
     return condition
 
 # фильтр на callback (пользователь не пользовался анкетой)
 def callback_filter(callback: CallbackQuery):
     """
-    Сработает только при нажатии на кнопку и если пользователь не проходил анкету
-    :param callback:
-    :return: bool
+    Сработает только при нажатии на кнопку и если пользователь не проходил анкету,
+    или уже прошел, тогда мы покажем ему ответы
     """
     callback_data = callback.data
     user_id = callback.from_user.id
@@ -107,10 +108,14 @@ async def process_samples_press(callback: CallbackQuery):
         fsm.create_answer_tmpl(user_id)
         fsm.next_state(user_id)
 
+
+        # здесь просто надо давать первый вопрос и все!!!
+        text, descr = fsm.get_question(user_id)
+        current_state = fsm.get_state(user_id)  # всегда будет 1
+
         await callback.message.answer(
-            text='Далее Вы можете заполнить новогоднюю анкету.',
-            reply_markup=get_kb(user_id)
-        )
+            text=f'{current_state}. {text}\n\n{descr}', reply_markup=get_kb(user_id))
+
     elif fsm.is_last_state(user_id):
         await callback.message.answer(
             text='Ваши шашлыки', reply_markup=to_main_menu_kb()

@@ -88,11 +88,8 @@ class FSM:
         Получаем состояния из БД. Состояния это номера вопросов
         """
         question_list = list(map(int, NewYearQuestions.get_active_question_numbers()))
-        question_list.append(0)
         self.states_list = sorted(question_list)
-        self.first_state = self.states_list[0]
-        self.last_state = self.states_list[-1] # последнее состояние - вопросы пройдены
-        self.states_list.pop()
+        self.last_state = self.states_list[-1] + 1 # последнее состояние - вопросы пройдены
 
     def create_answer_tmpl(self, user_id: int):
         """
@@ -114,7 +111,7 @@ class FSM:
                           'photos': []}
             self.answer_tmpl['body'][number] = new_answer
 
-        self.redis_dict[user_id] = self.answer_tmpl
+
 
     def get_state(self, user_id: int):
         state = self.redis_dict[user_id]
@@ -141,14 +138,16 @@ class FSM:
         """
         user_state = self.get_state(user_id)
 
-        # если нет состояния, то инициализируем его для пользователя
+        # если нет состояния, то инициализируем его для пользователя с состоянием 1
         if user_state is None:
-            self.redis_dict[user_id] = {'state': self.first_state, 'answers': self.answer_tmpl}
+            self.redis_dict[user_id] = {'state': self.states_list[0], 'answers': self.answer_tmpl}
 
         # если состояние в списке, то просто увеличиваем его на 1
         # ПЛОХО: если номер в базе пропустим, то все упадет
         elif user_state in self.states_list:
             self.redis_dict[user_id]['state'] = self.redis_dict[user_id]['state'] + 1
+
+        # здесь может вернуться и последнее состояние
 
     def get_question(self, user_id: int):
         """
@@ -166,7 +165,6 @@ class FSM:
 
         # Пользователь проходит анкету
         elif user_state in self.states_list:
-            # + 1 потому что во время вопроса у нас состояние на 1 меньше вопроса
             question = NewYearQuestions.get_question_by_number(user_state)
             text = question[2]
             descr = question[3]
@@ -179,7 +177,7 @@ class FSM:
 
     def get_type_question(self, user_id: int):
         number: int | None = self.get_state(user_id)
-        if number:
+        if number in self.states_list:
             question = NewYearQuestions.get_question_by_number(number)
             type_question = question[4]
 
@@ -252,7 +250,7 @@ class FSM:
 
             # Пользователь проходит анкету
             elif user_state + 1 in self.states_list:
-                question = NewYearQuestions.get_question_by_number(user_state + 1)
+                question = NewYearQuestions.get_question_by_number(user_state)
                 button = question[5]
                 return button
             else:
