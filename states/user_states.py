@@ -1,10 +1,23 @@
 from aiogram.fsm.state import default_state, State, StatesGroup
-from database.methods import NewYearQuestions
+from database.methods import NewYearQuestions, NewYearAnswer, Users
 import redis
 import json
+from datetime import datetime
 
 red = redis.Redis(host='localhost', port=6379, db=0)
+
+# удаляем все тестовые данные из баз. На бою удалить
 red.flushdb()
+NewYearAnswer.clear_table()
+
+def current_datetime():
+    # Получаем текущую дату и время
+    now = datetime.now()
+
+    # Форматируем дату и время в нужный формат
+    formatted_datetime = now.strftime("%d.%m.%Y %H:%M")
+
+    return formatted_datetime
 
 class UserDict:
     """
@@ -98,7 +111,7 @@ class FSM:
         """
         self.all_questions = NewYearQuestions.get_all_questions()
         self.answer_tmpl = {
-                'date_start': '',
+                'date_start': current_datetime(),
                 'date_end': '',
                 'body': {}
                 }
@@ -261,7 +274,30 @@ class FSM:
             print(err, str(err), type(err).__name__)
             return 'Отправить'
 
+    def save_answers(self, user_id: int):
+        """
+        Нужно сохранить json в базе данных
+        """
+        # Получим json
+        ready_dict: dict = self.redis_dict[user_id].user_dict['answers']
+        ready_dict['date_end'] = current_datetime()
 
+        # Преобразуем словарь в строку JSON
+        data_json = json.dumps(ready_dict)
+
+        id = Users.get_id_by_tg_id(user_id)
+        if id:
+            NewYearAnswer.insert_answer(id, data_json)
+
+    def get_answers(self, user_id: int):
+        id = Users.get_id_by_tg_id(user_id)
+        if id:
+            answer = NewYearAnswer.get_answer_by_user_id(id)
+
+            # Преобразование строки в словарь
+            data_dict = json.loads(answer[2])
+            print(data_dict)
+            return data_dict
 
 
 

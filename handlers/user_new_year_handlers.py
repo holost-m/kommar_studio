@@ -2,9 +2,7 @@ from aiogram import Router
 from aiogram import Bot
 from aiogram import F
 from aiogram.filters import Command, CommandStart
-from aiogram.types import Message
-from aiogram.types import CallbackQuery
-
+from aiogram.types import Message, CallbackQuery
 from keyboards.user_keyboards import (main_keyboard,
                                       samples_keyboard,
                                       to_main_menu_kb)
@@ -18,6 +16,8 @@ from aiogram.types import (InputFile,
                            InputMediaPhoto)
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from states.user_states import fsm
+import asyncio
+from aiogram import types
 
 
 # Инициализируем роутер для обработки пользовательских сообщений
@@ -28,7 +28,7 @@ def get_kb(user_id):
     text_button = fsm.get_current_button(user_id)
     button = KeyboardButton(text=text_button)
     # Создаем клавиатуру и добавляем кнопку
-    keyboard = ReplyKeyboardMarkup(keyboard=[[button]], resize_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(keyboard=[[button]], resize_keyboard=True, one_time_keyboard=True)
     return keyboard
 
 def get_kb_text(user_id):
@@ -127,8 +127,32 @@ async def process_samples_press(callback: CallbackQuery):
 # Нажата кнопка "Заполнить Новогоднюю анкету". Но анкета уже заполнена
 @router.callback_query(callback_filter_finish)
 async def process_samples_press(callback: CallbackQuery):
+    user_id = callback.from_user.id
+    data_dict = fsm.get_answers(user_id)
+
+    # Здесь пользователю должны вернуться все его ответы
     await callback.message.answer(
-            text='Ваши шашлыки', reply_markup=to_main_menu_kb()
+        text=f"*Дата начала:* {data_dict['date_start']}\n*Дата окончания:* {data_dict['date_end']}",
+                parse_mode='Markdown'
+    )
+    # проходимся циклом и отвечаем на все вопросы:
+    for key, value in data_dict['body'].items():
+        # отправляем текстовые ответы
+        if value['type'] != 'press_button':
+
+            await callback.message.answer(
+                text=f"*Вопрос:* {value['question']}\n\n*Ответ:* {value['text_answer']}",
+                parse_mode='Markdown'
+            )
+        # если имеется фото, то отправляем фото
+        if value['photos']:
+            for file_id in value['photos']:
+                await callback.bot.send_photo(chat_id=user_id, photo=file_id)
+
+        await asyncio.sleep(0.05)
+
+    await callback.message.answer(
+            text='Выберите действие', reply_markup=to_main_menu_kb()
     )
 
 # Переключает состояние и возвращает вопрос по нему
@@ -148,6 +172,7 @@ async def send_question(message: Message):
         await message.answer(
             text=f'{current_state}. {text}\n\n{descr}', reply_markup=get_kb(user_id))
     else:
+        fsm.save_answers(user_id)
         await message.answer(
             text='Главное меню',
             reply_markup=main_keyboard(is_admin(dct_admins, user_id))
@@ -168,7 +193,7 @@ async def add_text(message: Message):
 
 # photo_text обработчик. добавить их в список
 @router.message(photo_text_filter)
-async def add_photo_text(message: Message):
+async def add_photo_text(message: Message, bot):
     """
     Получить все id photo и добавить их в редис.
     В первом сообщении придет текст и первое фото, в остальных сообщения только фото
@@ -189,5 +214,14 @@ async def add_photo_text(message: Message):
     if message_caption:
         fsm.add_text(user_id, message_caption)
 
-    await message.answer(
-        text=f'Нажмите кнопку или добавьте еще информацию', reply_markup=get_kb(user_id))
+
+    # если фото у нас несколько
+    if media_group_id:
+
+        sent_message = await message.answer(
+                text=f'Фото сохранено', reply_markup=get_kb(user_id))
+
+    elif not media_group_id:
+        # это не медиагруппа
+        await message.answer(
+            text=f'Нажмите кнопку или добавьте еще информацию', reply_markup=get_kb(user_id))

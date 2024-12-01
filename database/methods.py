@@ -166,7 +166,10 @@ class Buttons:
 
 class Users:
     @classmethod
-    def get_tg_ids(cls):
+    def get_tg_ids(cls) -> list:
+        """
+        Вернет все tg_id пользователей
+        """
         with sqlite3.connect(DB_NAME) as conn:
             cursor = conn.cursor()
             cursor.execute('SELECT tg_id FROM users')
@@ -192,6 +195,20 @@ class Users:
             cursor.execute("SELECT * FROM users")
             users = cursor.fetchall()
             return users
+
+    @classmethod
+    def get_id_by_tg_id(cls, tg_id: int) -> int | None:
+        """
+        Получить идентификатор пользователя по его tg_id
+        """
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT id FROM users WHERE tg_id = ?", (tg_id,))
+            result = cursor.fetchone()
+            if result:
+                return result[0]
+            else:
+                return None
 
 class NewYearQuestions:
     column_names = ('id', 'number', 'question', 'description', 'type', 'button', 'is_active')
@@ -228,6 +245,39 @@ class NewYearQuestions:
             cursor.execute("SELECT number FROM NewYearQuestions WHERE is_active = 1")
             active_numbers = [row[0] for row in cursor.fetchall()]
             return active_numbers
+
+class NewYearAnswer:
+    column_names = ('id', 'user_id', 'answer')
+    @classmethod
+    def insert_answer(cls, user_id: int, answer: str):
+        """
+        Вставить новый ответ в таблицу NewYearAnswer
+        """
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO NewYearAnswer (user_id, answer) VALUES (?, ?)", (user_id, answer))
+            conn.commit()
+
+    @classmethod
+    def get_answer_by_user_id(cls, user_id: int) -> tuple:
+        """
+        Получить данные ответа по user_id
+        """
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM NewYearAnswer WHERE user_id = ?", (user_id,))
+            result = cursor.fetchone()
+            return result
+
+    @classmethod
+    def clear_table(cls):
+        """
+        Полная очистка таблицы NewYearAnswer. Только для тестов
+        """
+        with sqlite3.connect(DB_NAME) as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM NewYearAnswer")
+            conn.commit()
 
 
 
