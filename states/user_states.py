@@ -91,7 +91,8 @@ class FSM:
         question_list.append(0)
         self.states_list = sorted(question_list)
         self.first_state = self.states_list[0]
-        self.last_state = self.states_list[-1] + 1 # последнее состояние - вопросы пройдены
+        self.last_state = self.states_list[-1] # последнее состояние - вопросы пройдены
+        self.states_list.pop()
 
     def create_answer_tmpl(self, user_id: int):
         """
@@ -124,7 +125,12 @@ class FSM:
 
     def is_correct_state(self, user_id: int):
         state = self.get_state(user_id)
+        print(state, self.states_list)
         return state in self.states_list
+
+    def is_last_state(self, user_id: int):
+        state = self.get_state(user_id)
+        return state == self.last_state
 
     def next_state(self, user_id: int):
         """
@@ -229,6 +235,35 @@ class FSM:
 
             # возвращаем dict
             return change_dict.user_dict
+
+    def get_current_button(self, user_id):
+        """
+        Возвращает текущую кнопку из анкеты, чтобы ее высветить пользователю
+        для нажатия
+        """
+        try:
+
+            user_state = self.get_state(user_id)
+
+
+            # Пользователь начал проходит анкету
+            if user_state is None:
+                return 'Отправить'
+
+            # Пользователь проходит анкету
+            elif user_state + 1 in self.states_list:
+                question = NewYearQuestions.get_question_by_number(user_state + 1)
+                button = question[5]
+                return button
+            else:
+                question = NewYearQuestions.get_question_by_number(user_state)
+                button = question[5]
+                return button
+        except Exception as err:
+            print(err, str(err), type(err).__name__)
+            return 'Отправить'
+
+
 
 
 

@@ -23,11 +23,17 @@ from states.user_states import fsm
 # Инициализируем роутер для обработки пользовательских сообщений
 router = Router()
 
+def get_kb(user_id):
+    # Создаем кнопку
+    text_button = fsm.get_current_button(user_id)
+    button = KeyboardButton(text=text_button)
+    # Создаем клавиатуру и добавляем кнопку
+    keyboard = ReplyKeyboardMarkup(keyboard=[[button]], resize_keyboard=True)
+    return keyboard
 
-# Создаем кнопку
-button = KeyboardButton(text='Отправить')
-# Создаем клавиатуру и добавляем кнопку
-keyboard = ReplyKeyboardMarkup(keyboard=[[button]], resize_keyboard=True)
+def get_kb_text(user_id):
+    # Создаем кнопку
+    return fsm.get_current_button(user_id)
 
 
 
@@ -39,9 +45,15 @@ def new_year_filter_next(message: Message) -> bool:
     :return: bool
     """
 
+
     user_id = message.from_user.id
     message_text = message.text
-    condition = (message_text == 'Отправить') and fsm.is_correct_state(user_id)
+
+    # если тип нажатие кнопки - обрабатываем любые нажатия, чтобы не ждать пока кнопку нажмет
+    if fsm.get_type_question(user_id) == 'press_button':
+        return True
+
+    condition = (message_text == get_kb_text(user_id)) and fsm.is_correct_state(user_id)
     return condition
 
 # фильтр на callback (пользователь не пользовался анкетой)
@@ -53,7 +65,9 @@ def callback_filter(callback: CallbackQuery):
     """
     callback_data = callback.data
     user_id = callback.from_user.id
-    condition = callback_data == 'new_year_questions' and fsm.get_state(user_id) is None
+    condition = (callback_data == 'new_year_questions'
+                 and fsm.get_state(user_id) is None
+                 or fsm.is_last_state(user_id))
     return condition
 
 # фильтр только на текст
@@ -78,19 +92,29 @@ def photo_text_filter(message: Message) -> bool:
                  and (message_text or message_photo))
     return condition
 
+def press_button_filter(message: Message) -> bool:
+    user_id = message.from_user.id
+    return fsm.get_type_question(user_id) == 'press_button'
+
 # Нажата кнопка "Заполнить Новогоднюю анкету". Точка входа
 @router.callback_query(callback_filter)
 async def process_samples_press(callback: CallbackQuery):
     user_id = callback.from_user.id
 
-    # инициализируем словарь
-    fsm.create_answer_tmpl(user_id)
-    fsm.next_state(user_id)
+    if not fsm.is_last_state(user_id):
 
-    await callback.message.answer(
-        text='Далее Вы можете заполнить новогоднюю анкету.\nНажимайте кнопку "Отправить" для перехода к следующему вопросу',
-        reply_markup=keyboard
-    )
+        # инициализируем словарь
+        fsm.create_answer_tmpl(user_id)
+        fsm.next_state(user_id)
+
+        await callback.message.answer(
+            text='Далее Вы можете заполнить новогоднюю анкету.',
+            reply_markup=get_kb(user_id)
+        )
+    elif fsm.is_last_state(user_id):
+        await callback.message.answer(
+            text='Ваши шашлыки', reply_markup=to_main_menu_kb()
+        )
 
 # Переключает состояние и возвращает вопрос по нему
 @router.message(new_year_filter_next)
@@ -101,12 +125,13 @@ async def send_question(message: Message):
     # получаем текущее состояние
     current_state = fsm.get_state(user_id)
 
+    # если пользователь не ответил на все вопросы
     if int(current_state) != fsm.last_state:
         # получаем вопрос
         text, descr = fsm.get_question(user_id)
 
         await message.answer(
-            text=f'{current_state}. {text}\n\n{descr}\nДля следующего вопроса жми отправить', reply_markup=keyboard)
+            text=f'{current_state}. {text}\n\n{descr}', reply_markup=get_kb(user_id))
     else:
         await message.answer(text='Анкета заполнена!', reply_markup=to_main_menu_kb())
 
@@ -120,7 +145,8 @@ async def add_text(message: Message):
     user_id = message.from_user.id
     message_text = message.text
     fsm.add_text(user_id, message_text)
-
+    await message.answer(
+        text=f'Нажмите кнопку или добавьте еще информацию', reply_markup=get_kb(user_id))
 
 # photo_text обработчик. добавить их в список
 @router.message(photo_text_filter)
@@ -146,4 +172,4 @@ async def add_photo_text(message: Message):
         fsm.add_text(user_id, message_caption)
 
     await message.answer(
-        text=f' ', reply_markup=keyboard)
+        text=f'Нажмите кнопку или добавьте еще информацию', reply_markup=get_kb(user_id))
