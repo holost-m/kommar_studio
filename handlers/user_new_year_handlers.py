@@ -59,16 +59,23 @@ def new_year_filter_next(message: Message) -> bool:
     return condition
 
 # фильтр на callback (пользователь не пользовался анкетой)
-def callback_filter(callback: CallbackQuery):
+def callback_filter_start(callback: CallbackQuery):
     """
-    Сработает только при нажатии на кнопку и если пользователь не проходил анкету,
-    или уже прошел, тогда мы покажем ему ответы
+    Сработает только при нажатии на кнопку и если пользователь не проходил анкету
     """
     callback_data = callback.data
     user_id = callback.from_user.id
     condition = (callback_data == 'new_year_questions'
-                 and fsm.get_state(user_id) is None
-                 or fsm.is_last_state(user_id))
+                 and fsm.get_state(user_id) is None)
+    return condition
+
+def callback_filter_finish(callback: CallbackQuery):
+    """
+    Сработает только если пользователь уже прошел, тогда мы покажем ему ответы
+    """
+    callback_data = callback.data
+    user_id = callback.from_user.id
+    condition = callback_data == 'new_year_questions' and fsm.is_last_state(user_id)
     return condition
 
 # фильтр только на текст
@@ -98,7 +105,7 @@ def press_button_filter(message: Message) -> bool:
     return fsm.get_type_question(user_id) == 'press_button'
 
 # Нажата кнопка "Заполнить Новогоднюю анкету". Точка входа
-@router.callback_query(callback_filter)
+@router.callback_query(callback_filter_start)
 async def process_samples_press(callback: CallbackQuery):
     user_id = callback.from_user.id
 
@@ -116,10 +123,13 @@ async def process_samples_press(callback: CallbackQuery):
         await callback.message.answer(
             text=f'{current_state}. {text}\n\n{descr}', reply_markup=get_kb(user_id))
 
-    elif fsm.is_last_state(user_id):
-        await callback.message.answer(
+
+# Нажата кнопка "Заполнить Новогоднюю анкету". Но анкета уже заполнена
+@router.callback_query(callback_filter_finish)
+async def process_samples_press(callback: CallbackQuery):
+    await callback.message.answer(
             text='Ваши шашлыки', reply_markup=to_main_menu_kb()
-        )
+    )
 
 # Переключает состояние и возвращает вопрос по нему
 @router.message(new_year_filter_next)
@@ -138,7 +148,10 @@ async def send_question(message: Message):
         await message.answer(
             text=f'{current_state}. {text}\n\n{descr}', reply_markup=get_kb(user_id))
     else:
-        await message.answer(text='Анкета заполнена!', reply_markup=to_main_menu_kb())
+        await message.answer(
+            text='Главное меню',
+            reply_markup=main_keyboard(is_admin(dct_admins, user_id))
+        )
 
 # текстовый обработчик
 @router.message(only_text_filter)
